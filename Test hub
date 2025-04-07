@@ -2258,7 +2258,3 @@ Teleport:AddButton("Jungle Gym", function()
 end)
 
 local Credits = window:AddTab("Credits")
-
-Credits:AddLabel("Paid Version, 1,000 Robux")
-Credits:AddLabel("Script Made By KavzIIIX")
-Credits:AddLabel("Discord: 0deevv0.")
