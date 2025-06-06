@@ -1,0 +1,257 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Load Rayfield UI Library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Create Main Window
+local Window = Rayfield:CreateWindow({
+    Name = "J4F SANITY",
+    LoadingTitle = "Loading GUI",
+    LoadingSubtitle = "By You",
+    ConfigurationSaving = {
+        Enabled = false,
+    }
+})
+
+-- Tabs
+local mainTab = Window:CreateTab("Main")
+local farmingTab = Window:CreateTab("Farming")
+
+-- Anti-AFK Button
+mainTab:CreateButton({
+    Name = "Anti-AFK",
+    Callback = function()
+        loadstring(game:HttpGet('https://pastebin.com/raw/TRCYuX46'))()
+        print("Anti-AFK script executed.")
+    end
+})
+
+-- Lock Position Toggle
+local lockPositionEnabled = false
+local lockedCFrame = nil
+mainTab:CreateToggle({
+    Name = "Lock Position",
+    CurrentValue = false,
+    Callback = function(state)
+        lockPositionEnabled = state
+        local player = game:GetService("Players").LocalPlayer
+        if state and player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            lockedCFrame = player.Character.HumanoidRootPart.CFrame
+
+            task.spawn(function()
+                while lockPositionEnabled do
+                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and lockedCFrame then
+                        player.Character.HumanoidRootPart.CFrame = lockedCFrame
+                    end
+                    task.wait(0.05)
+                end
+            end)
+        end
+    end
+})
+
+-- Fast Strength Toggle
+farmingTab:CreateToggle({
+    Name = "Fast Strength",
+    CurrentValue = false,
+    Callback = function(state)
+        _G.SmartGrind = state
+        if state then
+            task.spawn(function()
+                local player = game:GetService("Players").LocalPlayer
+                local muscleEvent = player.muscleEvent
+                local swiftSamurais = {}
+
+                for _, pet in pairs(player.petsFolder.Unique:GetChildren()) do
+                    if pet.Name == "Swift Samurai" then
+                        table.insert(swiftSamurais, pet)
+                    end
+                end
+
+                game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("equipMultiPet", swiftSamurais)
+
+                while _G.SmartGrind do
+                    for i = 1, 100 do muscleEvent:FireServer("rep") end
+                    task.wait(0.01)
+                    for i = 1, 50 do muscleEvent:FireServer("rep") end
+                    task.wait(0.01)
+                    for i = 1, 10 do muscleEvent:FireServer("rep") end
+                    task.wait(0.01)
+                    if math.random(1, 20) == 1 then task.wait(math.random(0.1, 0.3)) end
+                end
+
+                game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("unequipAllPets")
+            end)
+        end
+    end
+})
+
+-- Hide Frames Toggle
+local destroyFramesSwitch = Instance.new("BoolValue")
+destroyFramesSwitch.Name = "DestroyFramesSwitch"
+destroyFramesSwitch.Value = false
+destroyFramesSwitch.Parent = game:GetService("ReplicatedStorage")
+
+local function destroyFramesIfNeeded()
+    local rs = game:GetService("ReplicatedStorage")
+    local frameNames = {"durabilityFrame", "strengthFrame", "agilityFrame"}
+    if destroyFramesSwitch.Value then
+        for _, name in ipairs(frameNames) do
+            local f = rs:FindFirstChild(name)
+            if f then f:Destroy() end
+        end
+    end
+end
+
+farmingTab:CreateToggle({
+    Name = "Hide Frames",
+    CurrentValue = false,
+    Callback = function(state)
+        destroyFramesSwitch.Value = state
+        destroyFramesIfNeeded()
+    end
+})
+
+-- Fast Rebirth Logic
+local autoRebirth = false
+farmingTab:CreateToggle({
+    Name = "Fast rebirth",
+    CurrentValue = false,
+    Callback = function(state)
+        autoRebirth = state
+        if state then
+            task.spawn(function()
+                local c = game:GetService("Players").LocalPlayer
+                local a = game:GetService("ReplicatedStorage")
+
+                local function unequipAllPets()
+                    for _, h in pairs(c.petsFolder:GetChildren()) do
+                        if h:IsA("Folder") then
+                            for _, j in pairs(h:GetChildren()) do
+                                a.rEvents.equipPetEvent:FireServer("unequipPet", j)
+                            end
+                        end
+                    end
+                    task.wait(.1)
+                end
+
+                local function equipPet(petName)
+                    unequipAllPets()
+                    task.wait(.01)
+                    for _, n in pairs(c.petsFolder.Unique:GetChildren()) do
+                        if n.Name == petName then
+                            a.rEvents.equipPetEvent:FireServer("equipPet", n)
+                        end
+                    end
+                end
+
+                local function getMachine(machineName)
+                    local machine = workspace.machinesFolder:FindFirstChild(machineName)
+                    if not machine then
+                        for _, s in pairs(workspace:GetChildren()) do
+                            if s:IsA("Folder") and s.Name:find("machines") then
+                                machine = s:FindFirstChild(machineName)
+                                if machine then break end
+                            end
+                        end
+                    end
+                    return machine
+                end
+
+                local function interact()
+                    local u = game:GetService("VirtualInputManager")
+                    u:SendKeyEvent(true, "E", false, game)
+                    task.wait(.1)
+                    u:SendKeyEvent(false, "E", false, game)
+                end
+
+                while autoRebirth do
+                    local v = c.leaderstats.Rebirths.Value
+                    local w = 10000 + (5000 * v)
+
+                    if c.ultimatesFolder:FindFirstChild("Golden Rebirth") then
+                        local x = c.ultimatesFolder["Golden Rebirth"].Value
+                        w = math.floor(w * (1 - (x * 0.1)))
+                    end
+
+                    unequipAllPets()
+                    task.wait(.1)
+                    equipPet("Swift Samurai")
+
+                    while c.leaderstats.Strength.Value < w and autoRebirth do
+                        for _ = 1, 10 do
+                            c.muscleEvent:FireServer("rep")
+                        end
+                        task.wait()
+                    end
+
+                    unequipAllPets()
+                    task.wait(.1)
+                    equipPet("Tribal Overlord")
+
+                    local z = getMachine("Jungle Bar Lift")
+                    if z and z:FindFirstChild("interactSeat") then
+                        c.Character.HumanoidRootPart.CFrame = z.interactSeat.CFrame * CFrame.new(0, 3, 0)
+                        repeat task.wait(.1) interact() until c.Character.Humanoid.Sit
+                    end
+
+                    local A = c.leaderstats.Rebirths.Value
+                    repeat
+                        a.rEvents.rebirthRemote:InvokeServer("rebirthRequest")
+                        task.wait(.1)
+                    until c.leaderstats.Rebirths.Value > A
+
+                    task.wait()
+                end
+            end)
+        end
+    end
+})
+
+-- Target Rebirth Stop
+local targetRebirths = 0
+local autoRebirthToTarget = false
+
+mainTab:CreateInput({
+    Name = "Target Rebirths",
+    PlaceholderText = "Enter desired rebirths",
+    RemoveTextAfterFocusLost = true,
+    Callback = function(value)
+        local number = tonumber(value)
+        if number and number >= 0 then
+            targetRebirths = number
+            print("Target rebirths set to:", targetRebirths)
+        else
+            warn("Invalid input. Please enter a non-negative number.")
+        end
+    end
+})
+
+mainTab:CreateToggle({
+    Name = "Auto Rebirth to Target",
+    CurrentValue = false,
+    Callback = function(state)
+        autoRebirthToTarget = state
+        print("Auto Rebirth to Target:", state and "Enabled" or "Disabled")
+
+        if state then
+            task.spawn(function()
+                local player = game:GetService("Players").LocalPlayer
+                local rebirthRemote = game:GetService("ReplicatedStorage").rEvents.rebirthRemote
+                local rebirths = player.leaderstats:WaitForChild("Rebirths")
+
+                while autoRebirthToTarget do
+                    if tonumber(rebirths.Value) >= targetRebirths then
+                        print("Target reached! Auto Rebirth to Target disabled.")
+                        autoRebirthToTarget = false
+                        break
+                    end
+                    rebirthRemote:InvokeServer("rebirthRequest")
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
